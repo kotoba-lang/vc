@@ -1,4 +1,8 @@
 {:paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.12.0"}
+        io.github.kotoba-lang/compiler
+        {:git/url "https://github.com/kotoba-lang/compiler.git"
+         :git/sha "7a128e2d1a7d7cee1e6d2fef19aead94c0975340"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {io.github.cognitect-labs/test-runner
