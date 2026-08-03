@@ -9,22 +9,19 @@
   (document-vector-assoc (document-vector) 0 (document-null)))
 
 (defn field [value :document key :keyword] :document
-  (option-value-of [:option :document]
-    (document-get value key) (fail-document)))
+  (option-or (document-get value key) (fail-document)))
 
 (defn vector-item [value :document index :i64] :document
-  (option-value-of [:option :document]
-    (document-vector-at value index) (fail-document)))
+  (option-or (document-vector-at value index) (fail-document)))
 
 (defn doc-bool [value :document] :bool
-  (option-value-of [:option :bool] (document-bool-value value) false))
+  (option-or (document-bool-value value) false))
 
 (defn doc-string [value :document] :string
-  (option-value-of [:option :string] (document-string-value value) ""))
+  (option-or (document-string-value value) ""))
 
 (defn doc-keyword [value :document] :keyword
-  (option-value-of [:option :keyword]
-    (document-keyword-value value) (keyword-from-string "")))
+  (option-or (document-keyword-value value) (keyword-from-string "")))
 
 (defn keyword-equal? [left :keyword right :keyword] :bool
   (if (= left right) true false))
