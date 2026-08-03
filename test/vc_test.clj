@@ -3,7 +3,7 @@
             [clojure.java.shell :as shell]
             [clojure.test :refer [deftest is testing]]
             [kotoba.compiler.core :as compiler]
-            [kotoba.compiler.ir :as ir]))
+            [kotoba.kir :as ir]))
 
 (def source (slurp "src/vc.kotoba"))
 (defn call [kir function & args] (ir/execute kir function (vec args)))
@@ -14,9 +14,9 @@
 (defn dvec [& values] ["vector" (vec values)])
 (defn dmap [entries]
   ["map" (->> entries (sort-by (comp str key))
-              (mapv (fn [[key value]] [key value])))])
+              (mapv (fn [[key value]] [(dkw key) value])))])
 (defn dget [document key]
-  (some (fn [[candidate value]] (when (= candidate key) value)) (second document)))
+  (some (fn [[candidate value]] (when (= candidate (dkw key)) value)) (second document)))
 
 (deftest reference-preserves-vc-contract
   (let [kir (:kir (compiler/compile-source source :js-kotoba-v1))
@@ -91,12 +91,12 @@
           (str "import(process.argv[1]).then(async host=>{"
                "const j=await import('data:text/javascript;base64," js64 "');"
                "const w=await host.instantiateKotoba(Buffer.from(process.argv[2],'base64'));"
-               "const run=(x,doc)=>{const map=e=>doc(['map',e.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0)]);"
+               "const run=(x,doc)=>{const map=e=>doc(['map',e.map(([k,v])=>[['keyword',k],v]).sort((a,b)=>a[0][1]<b[0][1]?-1:a[0][1]>b[0][1]?1:0)]);"
                "const subject=map([[':id',['string','did:example:alice']]]);"
                "const opts=map([[':issuer',['string','did:web:issuer']],[':subject',subject],[':type',['keyword',':EmployeeCredential']]]);"
                "const c=x.credential(opts);if(!x['credential?'](c)||x['presentation?'](c))throw Error('credential');"
                "const vp=x.presentation(map([[':credentials',c],[':holder',['string','did:example:alice']]]));"
-               "if(!x['presentation?'](vp)||x.validate(c)[1].find(e=>e[0]===':valid?')[1][1]!==true)throw Error('presentation');"
+               "if(!x['presentation?'](vp)||x.validate(c)[1].find(e=>e[0][0]==='keyword'&&e[0][1]===':valid?')[1][1]!==true)throw Error('presentation');"
                "const missing=x.credential(map([[':issuer',['null']],[':subject',['null']]]));if(x.errors(missing)[1].length!==2)throw Error('errors');"
                "let rejected=false;try{x.credential({})}catch(e){rejected=true}if(!rejected)throw Error('reject');};"
                "run(j.instantiateKotoba({}),x=>x);run(w.instance.exports,w.typedValues.document);"
